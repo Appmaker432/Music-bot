@@ -3,7 +3,7 @@ name: Telegram Bot Run
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # අපිට ඕන වෙලාවට manual run කරන්න
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,13 +17,14 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      # මෙන්න මේක තමයි ලේසිම ක්‍රමය - තත්පර කිහිපයකින් FFmpeg දානවා
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v2
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install python-telegram-bot yt-dlp
 
       - name: Run Bot
         run: python main.py
