@@ -44,7 +44,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # YouTube Bot detection මගහරවා ගන්න Settings
     ydl_opts = {
         'format': 'bestaudio/best',
-        'default_search': 'ytsearch',  # නමක් ගැහුවොත් සර්ච් කරන්න
+        'default_search': 'ytsearch',
         'outtmpl': 'song_%(id)s.%(ext)s',
         'noplaylist': True,
         'quiet': True,
@@ -62,10 +62,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # ඩවුන්ලෝඩ් කිරීම
             info = ydl.extract_info(search_query, download=True)
-            
-            # සර්ච් එකක් නම් පළමු රිසල්ට් එක ගන්නවා
             if 'entries' in info:
                 video_info = info['entries'][0]
             else:
@@ -74,4 +71,24 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             temp_file = ydl.prepare_filename(video_info).replace(video_info['ext'], 'mp3')
             title = video_info.get('title', 'Music')
 
-            # සින්දුව ටෙලි
+            await context.bot.send_audio(
+                chat_id=query.message.chat_id,
+                audio=open(temp_file, 'rb'),
+                title=title,
+                caption=f"🎧 **{title}**\n✅ Quality: {quality}kbps"
+            )
+            
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            await query.message.delete()
+            
+    except Exception as e:
+        await query.message.reply_text(f"වැඩේ අවුල් වුණා මචං! ❌\nError: {str(e)[:100]}")
+
+if __name__ == '__main__':
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CallbackQueryHandler(button))
+    print("Bot is starting...")
+    app.run_polling()
